@@ -1,0 +1,124 @@
+#!/bin/bash
+#PBS -S /bin/bash
+#PBS -N Others
+#PBS -l nodes=1:ppn=12
+#PBS -e el.downstream.err
+#PBS -o el.downstream.log
+#PBS -q Mcu
+#PBS -V
+
+
+
+##### required parameters 
+### a. environments
+conda_activate="/public/zhis/miniconda3/bin/activate"
+
+#env1_EMBOSS="emboss"
+env2_BLAST="blast"
+env3_SALMON="salmon"
+
+### b. user-defined parameters
+threads="12"
+output_dir="/public/zhis/all/026.230705_allergen_exploration/03.HDHGenome_anno.250409/result"
+
+blDB_dir="/public/zhis/all/026.230705_allergen_exploration/03.HDHGenome_anno.250409/data/combined_db"
+
+## Combination of WHO/IUIS & AllergenOnline
+blastDB_prot_ref="${blDB_dir}/combined.Allergen_protein.fa"
+blastDB_nucl_ref="${blDB_dir}/combined.Allergen_nucleotide.fa"
+
+
+### c. others...
+fastq_dir="${output_dir}/01.Trimming"
+
+table="${fastq_dir}/trinity.table"
+
+### Annotation results
+fasta_dir="${output_dir}/05.Genome_prep/fun/annotate_results"
+fa_pref="Haliotis_discus_hannai"
+
+res_dir="${output_dir}/06.Downstream_0728"
+mkdir -p ${res_dir}
+
+input_prot_fa="${fasta_dir}/${fa_pref}.proteins.fa"
+input_nucl_fa="${fasta_dir}/${fa_pref}.cds-transcripts.fa"
+
+####### blastp, blastx, salmon...
+### raw fa, db
+
+##### BALSTP + BLASTX
+source ${conda_activate} ${env2_BLAST}
+
+evalue="1"
+blast_dir="${res_dir}/01.BLAST"
+blastDB_dir="${blast_dir}/index"
+mkdir -p ${blastDB_dir}
+
+### create index
+protdb_pref=`basename ${blastDB_prot_ref}`
+nucldb_pref=`basename ${blastDB_nucl_ref}`
+
+  makeblastdb \
+	-dbtype prot \
+	-in ${blastDB_prot_ref} \
+	-input_type fasta \
+	-parse_seqids \
+	-out ${blastDB_dir}/${protdb_pref}
+
+  makeblastdb \
+	-dbtype nucl \
+	-in ${blastDB_nucl_ref} \
+	-input_type fasta \
+	-parse_seqids \
+	-out ${blastDB_dir}/${nucldb_pref}
+
+echo "blast(pn) starts at `date`"
+  blastp \
+	-query ${input_prot_fa} \
+	-outfmt '6 std qlen slen qcovs qcovhsp' \
+	-db ${blastDB_dir}/${protdb_pref} \
+	-evalue ${evalue} \
+	-num_threads ${threads} \
+	-out ${blast_dir}/Result.blastp.tsv
+
+  blastn \
+        -query ${input_nucl_fa} \
+	-task blastn \
+        -outfmt '6 std qlen slen qcovs qcovhsp' \
+        -db ${blastDB_dir}/${nucldb_pref} \
+        -evalue ${evalue} \
+        -num_threads ${threads} \
+        -out ${blast_dir}/Result.blastn.tsv
+
+
+echo "blast(pn) ends at `date`"
+conda deactivate
+
+source ${conda_activate} ${env3_SALMON}
+
+reference="${input_nucl_fa}"
+salmon_dir="${res_dir}/02.Salmon"
+salmon_index="${salmon_dir}/index"
+mkdir -p ${salmon_index}
+
+salmon index -p ${threads} \
+	-t ${reference} \
+	-i ${salmon_index}/
+
+cat ${table} | while read i;do
+
+	arr=(${i})
+	id="${arr[1]}"
+	fq1="${fastq_dir}/${arr[2]}"
+	fq2="${fastq_dir}/${arr[3]}"
+
+	salmon quant \
+		-i ${salmon_index} \
+		-l A \
+		-1 ${fq1} \
+		-2 ${fq2} \
+		-p ${threads} \
+		-o ${salmon_dir}/${id}_quant
+done
+
+conda deactivate

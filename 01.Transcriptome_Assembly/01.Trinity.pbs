@@ -1,0 +1,172 @@
+#!/bin/bash
+#PBS -S /bin/bash
+#PBS -N test
+#PBS -l nodes=1:ppn=12
+#PBS -e el.Tri1.err
+#PBS -o el.Tri1.log
+#PBS -q batch
+#PBS -V
+
+##### required parameters 
+### environments
+conda_activate="/public/zhis/miniconda3/bin/activate"
+## fastQC & Trim-galore & pigz
+env1_TrimGalore="trim_galore"
+env2_Trinity="trinity"
+env3_BUSCO="busco"
+
+TrinityStats='/public/zhis/miniconda3/envs/trinity/bin/TrinityStats.pl'
+orthodb="/public/zhis/ref/BUSCO_ref_database/mollusca_odb10"
+
+
+threads="12"
+input_dir="/public/zhis/all/026.230705_allergen_exploration/03.HDHGenome_anno.250409/data/RNA_raw"
+res_dir="/public/zhis/all/026.230705_allergen_exploration/03.HDHGenome_anno.250409/result"
+## Table Format: rawfq1, rawfq2, group, subgroup, trimfq1, trimfq2
+table="/public/zhis/all/026.230705_allergen_exploration/03.HDHGenome_anno.250409/data/RNA_raw/sample.table"
+
+
+##### 1. Quality assessment for raw fq data ###
+source ${conda_activate} ${env1_TrimGalore}
+
+rawfastQC_dir="${res_dir}/00.RawFastQC"
+trimGalore_resdir="${res_dir}/01.Trimming"
+mkdir -p ${rawfastQC_dir}
+mkdir -p ${trimGalore_resdir}/fastqc
+
+cd ${input_dir}
+
+echo "Step 1: Data Preprocessing. Starts at: `date`"
+  cat ${table} | while read i; do
+	
+	arr=(${i})
+	fq1=${arr[0]}
+	fq2=${arr[1]}
+
+	fastqc \
+	  -t ${threads} \
+	  -q \
+	  --dir ${rawfastQC_dir} \
+	  -o ${rawfastQC_dir} \
+	  ${fq1} ${fq2}
+
+	trim_galore \
+		-j ${threads} \
+		--consider_already_trimmed 10000 \
+		--paired \
+		--retain_unpaired \
+		--phred33 \
+		--output_dir ${trimGalore_resdir} \
+		--length 36 \
+		--fastqc_args "-t ${threads} -q -o ${trimGalore_resdir}/fastqc" \
+		-q 5 \
+		${fq1} ${fq2}
+done
+echo "Step 1 ends at: `date`"
+unset i arr fq1 fq2
+
+
+cd ${trimGalore_resdir}
+
+mkdir unpaired
+mv *unpaired_?.fq.gz unpaired
+
+conda deactivate
+
+### create a table for trinity
+cat ${table} | cut -f 3-6 > trinity.table
+
+
+##### Step 2: Denovo Assembly & Quality Assessment
+source ${conda_activate} ${env2_Trinity}
+
+trinity_dir="${res_dir}/02.DenovoAssembly"
+mkdir -p ${trinity_dir}
+
+echo "Step 2: Transcriptome De no vo assembly and Quality Evaluation."
+echo "Step 2 starts at: `date`"
+
+  Trinity \
+	--seqType fq \
+	--max_memory 40G \
+	--CPU ${threads} \
+	--verbose \
+	--output ${trinity_dir}/Trinity_material \
+	--no_salmon \
+	--samples_file trinity.table
+
+echo "Step 2 ends at: `date`"
+
+cd ${trinity_dir}
+rename 'Trinity_material' "Result" ./Trinity_material.Trinity.fasta*
+
+
+#### QUALITY ASSESSMENT
+### 1. N50
+  nohup ${TrinityStats} ./Result.Trinity.fasta > ./stats.N50.log &
+
+### 2. Read Alignment using Bowtie2
+module add samtools
+
+cd ${trimGalore_resdir}
+
+bowtie2_dir="${trinity_dir}/bowtie2"
+mkdir -p ${bowtie2_dir}
+
+  bowtie2-build --threads ${threads} \
+	${trinity_dir}/Result.Trinity.fasta \
+	${trinity_dir}/Result.Trinity.fasta
+
+  cat trinity.table | while read i; do
+
+	arr=(${i})
+	fq1=${arr[2]}
+	fq2=${arr[3]}
+
+	output_pref=${arr[1]}
+
+	bowtie2 -p ${threads} \
+		-q \
+		-S ${bowtie2_dir}/${output_pref}.temp.sam \
+		--no-unal \
+		-k 20 \
+		-x ${trinity_dir}/Result.Trinity.fasta \
+		-1 ${fq1} \
+		-2 ${fq2}  \
+		2> ${bowtie2_dir}/${output_pref}.align_stats.txt \
+
+	samtools view \
+		-@ ${threads} \
+		-Sb \
+		-o ${bowtie2_dir}/${output_pref}.temp.bam \
+		${bowtie2_dir}/${output_pref}.temp.sam 
+
+	rm ${bowtie2_dir}/${output_pref}.temp.sam
+done
+
+module unload samtools
+
+  ls ${bowtie2_dir}/*.align_stats.txt | while read i; do 
+	
+	echo -e `basename ${i}`"\\t"`grep "overall alignment rate" ${i}` \
+	>> ${trinity_dir}/stats.bt2AlignRates.log
+done
+conda deactivate
+
+### 3. BUSCO
+source ${conda_activate} ${env3_BUSCO}
+
+busco_dir="${trinity_dir}"
+
+  busco -c ${threads} \
+	-i ${trinity_dir}/Result.Trinity.fasta \
+	--out_path ${busco_dir} \
+	-o busco \
+	-l ${orthodb} \
+	-m transcriptome \
+	-q \
+	--offline
+
+cat ${busco_dir}/busco/short_summary*.busco.txt > ${trinity_dir}/stats.busco.log
+
+conda deactivate
