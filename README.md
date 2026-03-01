@@ -30,9 +30,4 @@ By cross-referencing all identified proteins against authoritative allergen data
            
    4.3. B cell epitope prediction
    
-
-
-
-
-
-original article can be found in ...
+Upon completion of the entire analytical workflow, not only can a reliable allergen repertoire be identified for a given species, but also high-confidence, high-abundance allergens can be determined based on transcriptomic and proteomic expression levels.
