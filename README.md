@@ -11,7 +11,9 @@
 
 ## 2. Genome Annotation  
    2.1. Genome preparation  
-   2.2. Funannotate pipeline  
+   2.2. Funannotate pipeline (expand) 
+   2.3. ...
+   2.4. ...
 
 ## 3. Alignment to representative allergen database  
    3.1. 
