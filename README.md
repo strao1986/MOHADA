@@ -21,9 +21,9 @@
 ## 3. Identification & Quantification of Proteins using DIA-NN2 
 
 ## 4. Alignment to representative allergen database  
-   3.1. 
-   3.2. 
-   3.3. 
+   4.1. 
+   4.2. 
+   4.3. 
 
 
 ## 4. Post-alignment analysis 
