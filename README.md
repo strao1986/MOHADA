@@ -18,7 +18,7 @@ By cross-referencing all identified proteins against authoritative allergen data
    
    2.2. Funannotate pipeline
 
-## 3. Alingment to representative allergen database
+## 3. Alignment to representative allergen database
 
 ## 4. Post-alignment analysis
    4.1. pairwise alignment
