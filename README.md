@@ -14,6 +14,10 @@
    2.2. Funannotate pipeline  
 
 ## 3. Alignment to representative allergen database  
+   3.1. 
+   3.2. 
+   3.3. 
+
 
 ## 4. Post-alignment analysis 
    4.1. pairwise alignment  
