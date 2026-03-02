@@ -5,17 +5,22 @@
 
 # Overview  
 ## 1. Transcriptome assembly and Quality assessment  
-   1.1. Data preprocessing  
+   1.1. Transcriptome data preprocessing  
    1.2. Denovo transcriptome assembly  
-   1.3. Assemble quality assessment  
+   1.3. Quality assessment  
 
 ## 2. Genome Annotation  
-   2.1. Genome preparation  
-   2.2. Funannotate pipeline (expand) 
-   2.3. ...
-   2.4. ...
+   2.1. Genome cleaning  
+   2.2. Sort sequence by length & rename header
+   2.3. Genome soft-masking 
+   2.4. Pre-prediction step
+   2.5. Protein-coding gene prediction
+   2.6. Prediction refinement
+   2.7. Protein-coding gene annotation
 
-## 3. Alignment to representative allergen database  
+## 3. Identification & Quantification of Proteins using DIA-NN2 
+
+## 4. Alignment to representative allergen database  
    3.1. 
    3.2. 
    3.3. 
