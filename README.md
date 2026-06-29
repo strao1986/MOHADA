@@ -23,11 +23,11 @@
 ## 4. Alignment to representative allergen database  
    4.1. Alignment to WHO/IUIS Allergen Nomenclature database  
    4.2. Alignment to AllergenOnline database  
-   4.3. Result Summary  
+   4.3. Summary of results  
 
 
 ## 5. Post-alignment analysis 
-   5.1. pairwise alignment  
+   5.1. Pairwise alignment  
          tools: EMBOSS-Needle  
            
    5.2. Multiple sequence alignment & Phlyogenetic tree construction  
@@ -39,4 +39,4 @@
          
    
    
-Upon completion of the entire analytical workflow, not only can a reliable allergen repertoire be identified for a given species, but also high-confidence, high-abundance allergens can be determined based on transcriptomic and proteomic expression levels.
+Upon completion of the entire analytical workflow, not only can a reliable allergen repertoire be identified for a given species, but also high-confidence, high-abundance allergens could be determined based on transcriptomic and proteomic expression levels.
