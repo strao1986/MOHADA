@@ -11,29 +11,29 @@
 
 ## 2. Genome Annotation  
    2.1. Genome cleaning  
-   2.2. Sort sequence by length & rename header
-   2.3. Genome soft-masking 
-   2.4. Pre-prediction step
-   2.5. Protein-coding gene prediction
-   2.6. Prediction refinement
-   2.7. Protein-coding gene annotation
+   2.2. Sort sequence by length & rename header  
+   2.3. Genome soft-masking  
+   2.4. Pre-prediction step  
+   2.5. Protein-coding gene prediction  
+   2.6. Prediction refinement  
+   2.7. Protein-coding gene annotation  
 
 ## 3. Identification & Quantification of Proteins using DIA-NN2 
 
 ## 4. Alignment to representative allergen database  
-   4.1. 
-   4.2. 
-   4.3. 
+   4.1. Alignment to WHO/IUIS Allergen Nomenclature database  
+   4.2. Alignment to AllergenOnline database  
+   4.3. Result Summary  
 
 
-## 4. Post-alignment analysis 
-   4.1. pairwise alignment  
+## 5. Post-alignment analysis 
+   5.1. pairwise alignment  
          tools: EMBOSS-Needle  
            
-   4.2. Multiple sequence alignment & Phlyogenetic tree construction  
+   5.2. Multiple sequence alignment & Phlyogenetic tree construction  
          tools: Clustal Omega, MEGA12  
            
-   4.3. B cell epitope prediction  
+   5.3. B cell epitope prediction  
          Tools for linear B cell epitope prediction: ABCPred, BcePred and Bepipred;  
                for conformational B cell epitope: DiscoTope, SEPPA and CBTOPE.  
          
